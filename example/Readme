@@ -1,0 +1,27 @@
+使用json-c(包裝json資料), curl(發送訊息給Controller), onion(架設REST伺服器) 等函式庫
+因此在 configure.ac 的 LDFLAGS 加上應該鏈結的函式庫
+
+1. 提供 REST 介面提取 DPI 分析資料
+
+	在啟動時，加上o Option代表產生Onion Log訊息
+	如：sudo ./ndpiReader -i eth0 -o
+	目前寫死 port=5000，若要提取資料只要用 GET <ip>:5000 即可
+
+2. 提供 REST 介面新增或刪除協定
+
+	參考 proto.txt，總共有三種新增方式
+	使用 ndpi_handle_rule() 將原本在初始化時新增協定的功能結合REST介面
+	以 POST 方法傳送 JSON String，欄位如下：
+	
+	method: [add / del]
+	mode: [port / host / ip]
+	tcp_udp: [tcp / udp]
+	value: 參考 proto.txt 規格，如：在 port mode 下，value 應該入 8000-8080 之類的 port range
+	protocol: 新增協定的名稱
+
+3. DPI 初始化時，發送 GET 訊息將自身的 MAC 傳送給 Server(Controller)
+
+	在啟動時，加上S Option代表啟動此功能，後面接上 Controller 的 IP 及 Port
+	如：sudo ./ndpiReader -i eth0 -S 192.168.30.62:8080
+	DPI將以 GET 發送訊息到 URL http://192.168.30.62:8080/dpi/connect/d8:50:e6:36:ad:b3
+	若Server接收到，則回傳"DPI_INIT_OK"代表成功。
